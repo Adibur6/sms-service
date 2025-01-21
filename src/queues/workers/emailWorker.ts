@@ -1,23 +1,38 @@
 import { Worker } from 'bullmq';
 import { sendRequest } from '../../utilities/requestSender';
 import { config } from '../config';
-
+import { emailServices } from '../../third party services/serviceList';
+import { addEmailToQueue } from '../emailQueue';
+import { AxiosError } from 'axios';
+import { getRandomServiceNames } from '../../utilities/getRandomServices';
 const emailWorker = new Worker('emailQueue', async job => {
+    const { serviceNames, delay , subject, body, recipients } = job.data;
+    console.log(`Email job received with subject: ${subject}, body: ${body}, recipients: ${recipients}`);
+    console.log(`Service Names: ${serviceNames}`);
+    console.log(`Delay: ${delay}`);
+    
     try {
-        const { subject, body, recipients } = job.data;
-        console.log(`Email job received with subject: ${subject}, body: ${body}, recipient: ${recipients}`);
-
-        const emailDomains = process.env.EMAIL_DOMAINS?.split(',') || [];
-        if (emailDomains.length === 0) {
-            throw new Error('No email domains configured');
+        if (serviceNames.length === 0) {
+            throw new Error('No email services remains');
         }
 
-           const randomIndex = Math.floor(Math.random() * emailDomains.length);
-        const selectedUrl = emailDomains[randomIndex];
+        const nextUrl = emailServices.filter(service => serviceNames[0]===service.name)[0].url;
 
-        await sendRequest(selectedUrl, { subject, body, recipients });
+        
+        await sendRequest(nextUrl, { subject, body, recipients });
     } catch (error) {
-        console.error(`Failed to process email job ${job.id}`);
+        console.error(`Failed to process Email job ${job.id}`);
+        if (error instanceof AxiosError) {
+
+            serviceNames.shift();
+            addEmailToQueue(serviceNames, delay, subject, body, recipients);
+        }
+        else{
+            const serviceNames= getRandomServiceNames(emailServices);
+            addEmailToQueue( serviceNames, 2* delay, subject, body, recipients);
+
+        }
+
         throw error; 
     }
 }, { connection: config.redis });
