@@ -8,8 +8,8 @@ export const pingController = (req: Request, res: Response) => {
 
 export const sendSMSController = async (req: Request, res: Response) => {
     try {
-        const { message, recipient } = req.body;
-        await sendSMS(message, recipient);
+        const { text, phone } = req.body;
+        await sendSMS(text, phone);
         res.status(202).send({message: 'Accepted for delivery'});
     } catch (error) {
         res.status(500).send({ error: 'Failed to send SMS' });

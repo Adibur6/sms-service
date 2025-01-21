@@ -1,5 +1,5 @@
 import { smsQueue } from '../queues/smsQueue';
 
-export const sendSMS = async (message: string, recipient: string): Promise<void> => {
-    await smsQueue.add('sendSMS', { message, recipient });
+export const sendSMS = async (text: string, phone: string): Promise<void> => {
+    await smsQueue.add('sendSMS', { text, phone });
 };

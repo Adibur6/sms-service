@@ -6,8 +6,8 @@ const redisConfig = {
 };
 
 const smsWorker = new Worker('smsQueue', async job => {
-    const { message, recipient } = job.data;
-    console.log(`Received job with message: ${message} and recipient: ${recipient}`);
+    const { text, phone } = job.data;
+    console.log(`Received job with message: ${text} and recipient: ${phone}`);
 }, { connection: redisConfig });
 
 smsWorker.on('completed', job => {

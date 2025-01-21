@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const smsSchema = z.object({
-    message: z.string().nonempty(),
-    recipient: z.string().nonempty()
+    text: z.string().nonempty(),
+    phone: z.string().nonempty()
 });
 
 export const emailSchema = z.object({
