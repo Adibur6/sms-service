@@ -5,32 +5,37 @@ import { addSMSToQueue } from '../smsQueue';
 import { AxiosError } from 'axios';
 import { getRandomServiceNames } from '../../utilities/getRandomServices';
 
+const processSMSJob = async (jobData: any) => {
+    const { serviceNames, delay, text, phone } = jobData;
+
+    if (serviceNames.length === 0) {
+        throw new Error('No SMS services remain');
+    }
+
+    const nextServiceName = serviceNames[0];
+    const nextService = smsServices.find(service => service.name === nextServiceName);
+
+    if (!nextService) {
+        throw new Error(`Service ${nextServiceName} not found`);
+    }
+
+    await nextService.send({ text, phone });
+};
+
 const smsWorker = new Worker('smsQueue', async job => {
-    const { serviceNames, delay, text, phone } = job.data;
-    console.log(`SMS job received with text: ${text}, phone: ${phone}`);
-    console.log(`Service Names: ${serviceNames}`);
-    console.log(`Delay: ${delay}`);
-
     try {
-        if (serviceNames.length === 0) {
-            throw new Error('No SMS services remain');
-        }
-        const firstServiceName = serviceNames[0];
-
-        const nextService = smsServices.find(service => service.name === firstServiceName);
-        if (!nextService) {
-            throw new Error(`Service ${firstServiceName} not found`);
-        }
-
-        await nextService.send({ text, phone });
+        console.log(`SMS job received with text: ${job.data.text}, phone: ${job.data.phone}`);
+        await processSMSJob(job.data);
     } catch (error) {
         console.error(`Failed to process SMS job ${job.id}`);
-        if (error instanceof AxiosError) { // Retry with new service if the job failed due to network error
-            serviceNames.shift(); 
-            addSMSToQueue(serviceNames, delay, text, phone);
-        } else { // Retry with exponential delay if the job failed due to lack of service 
+        const { serviceNames, delay, text, phone } = job.data;
+
+        if (error instanceof AxiosError) {
+            serviceNames.shift();
+            await addSMSToQueue(serviceNames, delay, text, phone);
+        } else {
             const newServiceNames = getRandomServiceNames(smsServices);
-            addSMSToQueue(newServiceNames, 2 * delay, text, phone);
+            await addSMSToQueue(newServiceNames, 2 * delay, text, phone);
         }
 
         throw error;
