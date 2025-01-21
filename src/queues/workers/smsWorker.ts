@@ -1,10 +1,6 @@
 import { Worker } from 'bullmq';
 import { sendRequest } from '../../utilities/requestSender';
-
-const redisConfig = {
-    host: 'localhost',
-    port: 6379,
-};
+import { config } from '../config';
 
 const smsWorker = new Worker('smsQueue', async job => {
     try {
@@ -26,7 +22,7 @@ const smsWorker = new Worker('smsQueue', async job => {
         console.error(`Failed to process SMS job ${job.id}`);
         throw error; // Re-throw the error to ensure it is caught by the 'failed' event handler
     }
-}, { connection: redisConfig });
+}, { connection: config.redis });
 
 smsWorker.on('completed', job => {
     console.log(`SMS job ${job.id} has completed!`);

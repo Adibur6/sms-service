@@ -1,7 +1,4 @@
 import { Queue } from 'bullmq';
+import { config } from './config';
 
-const redisConfig = {
-    host: 'localhost',
-    port: 6379,
-    };
-export const smsQueue = new Queue('smsQueue', { connection: redisConfig });
+export const smsQueue = new Queue('smsQueue', { connection: config.redis });

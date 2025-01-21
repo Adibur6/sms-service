@@ -1,10 +1,6 @@
 import { Worker } from 'bullmq';
 import { sendRequest } from '../../utilities/requestSender';
-
-const redisConfig = {
-    host: 'localhost',
-    port: 6379,
-};
+import { config } from '../config';
 
 const emailWorker = new Worker('emailQueue', async job => {
     try {
@@ -24,7 +20,7 @@ const emailWorker = new Worker('emailQueue', async job => {
         console.error(`Failed to process email job ${job.id}`);
         throw error; 
     }
-}, { connection: redisConfig });
+}, { connection: config.redis });
 
 emailWorker.on('completed', job => {
     console.log(`Email job ${job.id} has completed!`);
