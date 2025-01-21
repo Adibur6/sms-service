@@ -1,6 +1,8 @@
 import express from 'express';
 import mainRoutes from './routes/mainRoutes';
 import dotenv from 'dotenv';
+import './queues/workers/emailWorker'; // Import email worker
+import './queues/workers/smsWorker'; // Import SMS worker
 
 dotenv.config();
 

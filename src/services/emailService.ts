@@ -1,4 +1,5 @@
-export const sendEmail = (subject: string, body: string, recipient: string): string => {
-    // Here you would add logic to send the email
-    return `Email sent to ${recipient} with subject: ${subject} and body: ${body}`;
+import { emailQueue } from '../queues/emailQueue';
+
+export const sendEmail = async (subject: string, body: string, recipient: string): Promise<void> => {
+    await emailQueue.add('sendEmail', { subject, body, recipient });
 };
