@@ -15,11 +15,15 @@ const emailWorker = new Worker('emailQueue', async job => {
         if (serviceNames.length === 0) {
             throw new Error('No email services remains');
         }
+        const firstServiceName = serviceNames[0];
 
-        const nextUrl = emailServices.filter(service => serviceNames[0]===service.name)[0].url;
-
+        const nextService = emailServices.find(service => service.name === firstServiceName);
+        if (!nextService) {
+            throw new Error(`Service ${firstServiceName} not found`);
+        }
         
-        await sendRequest(nextUrl, { subject, body, recipients });
+        await nextService.send({ subject, body, recipients });
+    
     } catch (error) {
         console.error(`Failed to process Email job ${job.id}`);
         if (error instanceof AxiosError) {
