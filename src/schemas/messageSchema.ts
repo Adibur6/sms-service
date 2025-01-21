@@ -8,5 +8,5 @@ export const smsSchema = z.object({
 export const emailSchema = z.object({
     subject: z.string().nonempty(),
     body: z.string().nonempty(),
-    recipient: z.string().email()
+    recipients: z.array(z.string().email())
 });

@@ -18,8 +18,8 @@ export const sendSMSController = async (req: Request, res: Response) => {
 
 export const sendEmailController = async (req: Request, res: Response) => {
     try {
-        const { subject, body, recipient } = req.body;
-        await sendEmail(subject, body, recipient);
+        const { subject, body, recipients } = req.body;
+        await sendEmail(subject, body, recipients);
         res.status(202).send({message: 'Accepted for delivery'});
     } catch (error) {
         res.status(500).send({ error: 'Failed to send email' });
