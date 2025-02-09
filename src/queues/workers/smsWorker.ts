@@ -2,15 +2,10 @@ import { Worker } from 'bullmq';
 import { config } from '../config';
 import { smsServices } from '../../third party services/serviceList';
 import { addSMSToQueue } from '../smsQueue';
-import { AxiosError } from 'axios';
-import { getRandomServiceNames } from '../../utilities/getRandomServices';
+import { sortServices } from '../../utilities/sortServices';
 
 const processSMSJob = async (jobData: any) => {
-    const { serviceNames, delay, text, phone } = jobData;
-
-    if (serviceNames.length === 0) {
-        throw new Error('No SMS services remain');
-    }
+    const { serviceNames, text, phone } = jobData;
 
     const nextServiceName = serviceNames[0];
     const nextService = smsServices.find(service => service.name === nextServiceName);
@@ -30,11 +25,11 @@ const smsWorker = new Worker('smsQueue', async job => {
         console.error(`Failed to process SMS job ${job.id}`);
         const { serviceNames, delay, text, phone } = job.data;
 
-        if (error instanceof AxiosError) {
+        if (serviceNames.length > 0) {
             serviceNames.shift();
             await addSMSToQueue(serviceNames, delay, text, phone);
         } else {
-            const newServiceNames = getRandomServiceNames(smsServices);
+            const newServiceNames = sortServices(smsServices);
             await addSMSToQueue(newServiceNames, 2 * delay, text, phone);
         }
 

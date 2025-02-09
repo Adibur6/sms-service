@@ -1,17 +1,11 @@
 import { Worker } from 'bullmq';
-import { sendRequest } from '../../utilities/requestSender';
 import { config } from '../config';
 import { emailServices } from '../../third party services/serviceList';
 import { addEmailToQueue } from '../emailQueue';
-import { AxiosError } from 'axios';
-import { getRandomServiceNames } from '../../utilities/getRandomServices';
+import { sortServices } from '../../utilities/sortServices';
 
 const processEmailJob = async (jobData: any) => {
-    const { serviceNames, delay, subject, body, recipients } = jobData;
-
-    if (serviceNames.length === 0) {
-        throw new Error('No email services remain');
-    }
+    const { serviceNames, subject, body, recipients } = jobData;
 
     const nextServiceName = serviceNames[0];
     const nextService = emailServices.find(service => service.name === nextServiceName);
@@ -31,11 +25,11 @@ const emailWorker = new Worker('emailQueue', async job => {
         console.error(`Failed to process email job ${job.id}`);
         const { serviceNames, delay, subject, body, recipients } = job.data;
 
-        if (error instanceof AxiosError) {
+        if (serviceNames.length > 0) {
             serviceNames.shift();
             await addEmailToQueue(serviceNames, delay, subject, body, recipients);
         } else {
-            const newServiceNames = getRandomServiceNames(emailServices);
+            const newServiceNames = sortServices(emailServices);
             await addEmailToQueue(newServiceNames, 2 * delay, subject, body, recipients);
         }
 
